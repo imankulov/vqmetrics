@@ -32,13 +32,13 @@ Thus, there are six abbreviations:
 	<th></th><th>Listening-only</th><th>Conversational</th>
 </tr>
 <tr>
-	<td>Subjective</td><td>MOS-LQS</td><td>MOS-CQS</td>
+	<th>Subjective</th><td>MOS-LQS</td><td>MOS-CQS</td>
 </tr>
 <tr>
-	<td>Objective</td><td>MOS-LQO</td><td>MOS-CQO</td>
+	<th>Objective</th><td>MOS-LQO</td><td>MOS-CQO</td>
 </tr>
 <tr>
-	<td>Estimated</td><td>MOS-LQE</td><td>MOS-CQE</td>
+	<th>Estimated</th><td>MOS-LQE</td><td>MOS-CQE</td>
 </tr>
 </table>
 
