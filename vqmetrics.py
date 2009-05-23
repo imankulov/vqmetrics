@@ -11,7 +11,7 @@ Contains also one helper class with Speex codec options:
 """
 from __future__ import division
 import sys
-from math import sqrt, pi, atan2, log, pow, cos, log
+from math import sqrt, pi, atan2, log, pow, cos, log, exp
 
 __all__ = 's'.split()
 
@@ -70,7 +70,7 @@ class SpeexMetric(object):
         return int(packets_per_second * size)
 
 
-def moslqo2r(mos):
+def mos2r(mos):
     """ With given MOS LQO return R-factor  (1 < MOS < 4.5) """
     D = -903522 + 1113960 * mos - 202500 * mos * mos
     if D < 0:
@@ -80,8 +80,7 @@ def moslqo2r(mos):
     return R
 
 
-
-def r2moslqo(r):
+def r2mos(r):
     """ With given R-factor return MOS """
     if r < 0:
         return 1
@@ -104,10 +103,39 @@ def delay2id(Ta):
     return Id
 
 
-def speexlossdelay2r(mode, loss, Ta):
-    return 93.4 - delay2id(Ta) - speexloss2ie(mode, loss)
+def pesq2mos(pesq):
+    """ Return MOS LQO value (within 1..4.5) on PESQ value (within -0.5..4.5).
+    Mapping function given from P.862.1 (11/2003) """
+    return 0.999 + (4.999-0.999) / (1+exp(-1.4945*pesq+4.6607))
 
 
+def mos2pesq(mos):
+    """ Return PESQ value (within -0.5..4.5) on MOS LQO value (within 1..4.5).
+    Mapping function given from P.862.1 (11/2003) """
+    inlog =(4.999-mos)/(mos-0.999)
+    return (4.6607-log(inlog)) / 1.4945
+
+
+#def speexlossdelay2r(mode, loss, Ta):
+#    return 93.4 - delay2id(Ta) - speexloss2ie(mode, loss)
+
+
+__test__ = {
+        'main':
+        """
+        * Truncation
+        >>> from decimal import Decimal as D
+        >>> trunc = lambda v: D('%.2f' % v)
+
+        * Satisfactory accuracy near bounds
+        >>> map(trunc, map(pesq2mos, [-0.5, 4.5]))
+        [Decimal("1.02"), Decimal("4.55")]
+
+        * Unsatisfactory accuracy near bounds
+        >>> map(trunc, map(mos2pesq, [1.0, 4.5]))
+        [Decimal("-2.43"), Decimal("4.42")]
+        """
+        }
 
 if __name__ == '__main__':
     import doctest
