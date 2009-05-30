@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 """
-Set of functions to convert between different speech quality estimation metrics
-such as PESQ MOS, MOS LQO, R-factor.
-
-Contains also one helper class with Speex codec options:
+ - Set of functions for converting between different speech quality estimation
+   metrics such as PESQ MOS, MOS LQO, R-factor.
+ - Python wrapper for ITU-T pesq utlity.
+ - Helper class to define Speex codec parameters based on other options:
     - mapping between speex "quality" and "mode" option
     - size (in bits) for earch speex frame with given mode
     - required bandwidth estimation
-
 """
 from __future__ import division
-import sys
+import sys, os
 from math import sqrt, pi, atan2, log, pow, cos, log, exp
 
 __all__ = 's'.split()
@@ -116,6 +115,35 @@ def mos2pesq(mos):
     return (4.6607-log(inlog)) / 1.4945
 
 
+def pesq(reference, degraded, sample_rate=None, program='pesq'):
+    """ Return PESQ quality estimation (two values: PESQ MOS and MOS LQO) based
+    on reference and degraded speech samples comparison.
+
+    Sample rate must be 8000 or 16000 (or can be defined reading reference file
+    header).
+
+    PESQ utility must be installed.
+    """
+    if not os.path.isfile(reference) or not os.path.isfile(degraded):
+        raise ValueError('reference or degraded file does not exist')
+    if not sample_rate:
+        import wave
+        w = wave.open(reference, 'r')
+        sample_rate = w.getframerate()
+        w.close()
+    if sample_rate not in (8000, 16000):
+        raise ValueError('sample rate must be 8000 or 16000')
+    import subprocess
+    args = [ program, '+%d' % sample_rate, reference, degraded  ]
+    pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
+    out, _ = pipe.communicate()
+    last_line = out.split('\n')[-2]
+    if not last_line.startswith('P.862 Prediction'):
+        raise ValueError(last_line)
+    return tuple(map(float, last_line.split()[-2:]))
+
+
+
 #def speexlossdelay2r(mode, loss, Ta):
 #    return 93.4 - delay2id(Ta) - speexloss2ie(mode, loss)
 
@@ -134,6 +162,16 @@ __test__ = {
         * Unsatisfactory accuracy near bounds
         >>> map(trunc, map(mos2pesq, [1.0, 4.5]))
         [Decimal("-2.43"), Decimal("4.42")]
+        """,
+        'pesq':
+        """
+        * PESQ utility
+        >>> pesq('reference.wav', 'degraded.wav')
+        (..., ...)
+        >>> pesq('vqmetrics.py', 'vqmetrics.py')
+        Traceback (most recent call last):
+            ...
+        Error: file does not start with RIFF id
         """
         }
 
