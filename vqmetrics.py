@@ -12,7 +12,7 @@ from __future__ import division
 import sys, os
 from math import sqrt, pi, atan2, log, pow, cos, log, exp
 
-__all__ = 's'.split()
+__all__ = 'SpeexMetric mos2r r2mos delay2id pesq2mos mos2pesq pesq'.split()
 
 class SpeexMetric(object):
     """
@@ -76,7 +76,7 @@ def mos2r(mos):
         D = 0
     h = 1/3 * atan2(15*sqrt(D), 18556-6750*mos)
     R = 20/3 * (8 - sqrt(226) * cos(h+pi/3))
-    return R
+    return R > 100 and 100.0 or R
 
 
 def r2mos(r):
@@ -162,6 +162,12 @@ __test__ = {
         * Unsatisfactory accuracy near bounds
         >>> map(trunc, map(mos2pesq, [1.0, 4.5]))
         [Decimal("-2.43"), Decimal("4.42")]
+
+        * mos2r tests
+        >>> trunc(mos2r(1))
+        Decimal("6.52")
+        >>> trunc(mos2r(4.5))
+        Decimal("100.00")
         """,
         'pesq':
         """
